@@ -1,10 +1,9 @@
-name: ESP32-S3 Build
+name: ESP32-S3 Build and Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - "v*"   # v1.0.0 のようなタグが push されたら実行
 
 jobs:
   build:
@@ -14,27 +13,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cache pip and PlatformIO cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/pip
-            ~/.platformio/.cache
-          key: ${{ runner.os }}-pio-${{ hashFiles('**/platformio.ini') }}
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install PlatformIO Core
-        run: pip install --upgrade platformio
+      - name: Install PlatformIO
+        run: pip install platformio
 
-      - name: Build project
+      - name: Build firmware
         run: pio run --environment esp32-s3-wroom-1
 
-      - name: Upload firmware artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload firmware to GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: firmware-s3
-          path: .pio/build/esp32-s3-wroom-1/firmware.bin
+          files: .pio/build/esp32-s3-wroom-1/firmware.bin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
