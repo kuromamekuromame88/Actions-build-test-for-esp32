@@ -1,0 +1,36 @@
+name: ESP32 Build
+
+# PushやPRがあると実行
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. リポジトリのコードをチェックアウト
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # 2. PlatformIO をセットアップ
+    - name: Set up PlatformIO
+      uses: platformio/action-setup@v2
+
+    # 3. 依存ライブラリをインストール（platformio.ini に記載されていれば自動）
+    - name: Install dependencies
+      run: pio update
+
+    # 4. プロジェクトのビルド
+    - name: Build project
+      run: pio run
+
+    # 5. ビルドしたバイナリをアーティファクトとして保存
+    - name: Upload firmware
+      uses: actions/upload-artifact@v3
+      with:
+        name: firmware
+        path: .pio/build/esp32dev/firmware.bin  # board名に応じてパスを変更
