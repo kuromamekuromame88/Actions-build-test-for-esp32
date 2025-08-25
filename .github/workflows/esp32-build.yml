@@ -1,6 +1,5 @@
-name: ESP32 Build
+name: ESP32-S3 Build
 
-# PushやPRがあると実行
 on:
   push:
     branches: [ main ]
@@ -12,25 +11,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. リポジトリのコードをチェックアウト
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # 2. PlatformIO をセットアップ
-    - name: Set up PlatformIO
-      uses: platformio/action-setup@v2
+      - name: Cache pip and PlatformIO cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio-${{ hashFiles('**/platformio.ini') }}
 
-    # 3. 依存ライブラリをインストール（platformio.ini に記載されていれば自動）
-    - name: Install dependencies
-      run: pio update
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    # 4. プロジェクトのビルド
-    - name: Build project
-      run: pio run
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
 
-    # 5. ビルドしたバイナリをアーティファクトとして保存
-    - name: Upload firmware
-      uses: actions/upload-artifact@v3
-      with:
-        name: firmware
-        path: .pio/build/esp32dev/firmware.bin  # board名に応じてパスを変更
+      - name: Build project
+        run: pio run --environment esp32-s3-wroom-1
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-s3
+          path: .pio/build/esp32-s3-wroom-1/firmware.bin
